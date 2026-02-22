@@ -17,7 +17,10 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'total_amount' => 0,
+            'status' => fake()->randomElement(['pending', 'completed', 'cancelled']),
+            'payment_method' => fake()->randomElement(['cash', 'visa']),
+            'created_at' => fake()->dateTimeBetween('-1 year', 'now'),
         ];
     }
 }
