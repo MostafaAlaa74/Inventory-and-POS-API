@@ -36,11 +36,9 @@ class Product extends Model
             ->decrement('stock_quantity', $quantity);
 
         if($updated === 0) {
-            throw new \Exception('Insufficient stock for product: ' . $this->name);
+            throw new \Exception('Insufficient stock for product: ' . $this->name . $this->id);
         }
 
-        // Refresh the model instance to get the updated stock quantity
-        $this->refresh();
 
     }
 

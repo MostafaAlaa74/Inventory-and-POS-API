@@ -25,7 +25,40 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'order_items')
-                    ->withPivot('quantity', 'unit_price')
-                    ->withTimestamps();
+            ->withPivot('quantity', 'unit_price')
+            ->withTimestamps();
+    }
+
+    public function scopeFilterByDateRange($query, $startDate, $endDate)
+    {
+        if ($startDate && $endDate) {
+            return $query->whereDate('created_at', '>=', $startDate)
+                ->whereDate('created_at', '<=', $endDate);
+        }
+        return $query;
+    }
+
+    public function scopeFilterBySpecificDate($query, $date)
+    {
+        if ($date) {
+            return $query->whereDate('created_at', $date);
+        }
+        return $query;
+    }
+
+    public function scopeFilterByCustomer($query, $customerId)
+    {
+        if ($customerId) {
+            return $query->where('customer_id', $customerId);
+        }
+        return $query;
+    }
+
+    public function scopeFilterByStatus($query, $status)
+    {
+        if ($status) {
+            return $query->where('status', $status);
+        }
+        return $query;
     }
 }

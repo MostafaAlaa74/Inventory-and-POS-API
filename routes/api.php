@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,3 +27,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/products/{product}/decrease-stock', [ProductController::class, 'decreaseStock']);
 });
 
+Route::resource('orders', OrderController::class)->middleware('auth:sanctum');

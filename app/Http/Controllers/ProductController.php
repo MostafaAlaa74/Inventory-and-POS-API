@@ -73,7 +73,8 @@ class ProductController extends Controller
 
         $quantity = $request->input('quantity');
         $product->addStock($quantity);
-
+        // Refresh the model instance to get the updated stock quantity
+        $product->refresh();
         return response()->json($product, 200);
     }
 
@@ -87,6 +88,8 @@ class ProductController extends Controller
         $quantity = $request->input('quantity');
         try {
             $product->decreaseStock($quantity);
+            // Refresh the model instance to get the updated stock quantity
+            $product->refresh();
             return response()->json($product, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);

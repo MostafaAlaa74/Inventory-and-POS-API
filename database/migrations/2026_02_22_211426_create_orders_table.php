@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // For the employee who created the order
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             $table->decimal('total_amount', 10, 2);
             $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
