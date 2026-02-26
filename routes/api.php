@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
@@ -27,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/products/{product}/add-stock', [ProductController::class, 'addStock']);
     Route::patch('/products/{product}/decrease-stock', [ProductController::class, 'decreaseStock']);
 });
+
+Route::resource('customers', CustomerController::class)->middleware('auth:sanctum');
 
 Route::resource('orders', OrderController::class)->middleware('auth:sanctum');
 

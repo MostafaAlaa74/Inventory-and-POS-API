@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateOrderRequest;
+use App\Services\CancelOrderService;
 use App\Services\CreateOrderService;
 use Illuminate\Http\Request;
 
@@ -12,9 +13,13 @@ class OrderController extends Controller
 {
 
     protected $createOrderService;
-    public function __construct(CreateOrderService $createOrderService)
+    protected $cancelOrderService;
+    public function __construct(
+        CreateOrderService $createOrderService,
+        CancelOrderService $cancelOrderService)
     {
         $this->createOrderService = $createOrderService;
+        $this->cancelOrderService = $cancelOrderService;
     }
     /**
      * Display a listing of the resource.
@@ -51,7 +56,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        //
+        response()->json($order->load('products'), 200);
     }
 
     /**
@@ -59,7 +64,20 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        //
+        $validatedData = $request->validate([
+            'status' => 'sometimes|in:pending,completed,cancelled',
+            'payment_method' => 'sometimes|in:cash,card',
+        ]);
+
+        if(isset($validatedData['status']) && $validatedData['status'] === 'cancelled' && $order->status !== 'cancelled') {
+            
+            try {
+                $order = $this->cancelOrderService->cancel($order->id);
+                return response()->json($order, 200);
+            } catch (\Exception $e) {
+                return response()->json(['error' => $e->getMessage()], 400);
+            }
+        }
     }
 
     /**
@@ -67,6 +85,14 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
-        //
+        if ($order->status === 'completed') {
+            return response()->json([
+                'error' => 'Completed orders cannot be deleted.'
+            ], 403);
+        }
+
+        $order->delete();
+
+        return response()->json(null, 204);
     }
 }
