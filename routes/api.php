@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,3 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::resource('orders', OrderController::class)->middleware('auth:sanctum');
+
+Route::get('/reports/top-selling-products', [ReportController::class, 'topSellingProducts']);
+Route::get('/reports/top-employees', [ReportController::class, 'topEmployees']);
