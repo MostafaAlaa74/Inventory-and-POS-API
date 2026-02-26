@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,3 +18,7 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LogoutController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::resource('categories', CategoryController::class);
+Route::resource('products', ProductController::class);
+
+Route::patch('/products/{product}/add-stock', [ProductController::class, 'addStock']);
+Route::patch('/products/{product}/decrease-stock', [ProductController::class, 'decreaseStock']);

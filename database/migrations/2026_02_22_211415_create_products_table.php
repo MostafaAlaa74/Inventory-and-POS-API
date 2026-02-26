@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->decimal('price', 8, 2);
-            $table->integer('stock_quantity');
+            $table->unsignedInteger('stock_quantity');
             $table->string('SKU')->unique(); // Like Barcode
             $table->timestamps();
 

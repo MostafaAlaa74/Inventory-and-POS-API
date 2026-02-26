@@ -28,4 +28,24 @@ class Product extends Model
             ->withPivot('quantity', 'unit_price')
             ->withTimestamps();
     }
+
+    public function decreaseStock($quantity)
+    {
+        $updated = $this->where('id', $this->id)
+            ->where('stock_quantity', '>=', $quantity)
+            ->decrement('stock_quantity', $quantity);
+
+        if($updated === 0) {
+            throw new \Exception('Insufficient stock for product: ' . $this->name);
+        }
+
+        // Refresh the model instance to get the updated stock quantity
+        $this->refresh();
+
+    }
+
+    public function addStock($quantity)
+    {
+        $this->increment('stock_quantity', $quantity);
+    }
 }

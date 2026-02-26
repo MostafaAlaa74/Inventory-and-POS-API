@@ -36,7 +36,9 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        return response()->json($category , 200);
+        return response()->json($category->load(['products' => function ($query) {
+            $query->where('stock_quantity', '>', 0);
+        }]), 200);
     }
 
     /**
