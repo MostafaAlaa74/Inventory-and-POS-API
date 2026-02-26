@@ -56,7 +56,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        response()->json($order->load('products'), 200);
+        return response()->json($order->load('products'), 200);
     }
 
     /**
@@ -78,6 +78,9 @@ class OrderController extends Controller
                 return response()->json(['error' => $e->getMessage()], 400);
             }
         }
+
+        $order->update($validatedData);
+        return response()->json($order, 200);
     }
 
     /**

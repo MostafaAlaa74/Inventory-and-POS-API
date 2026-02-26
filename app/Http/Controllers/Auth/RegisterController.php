@@ -17,8 +17,8 @@ class RegisterController extends Controller
     }
 
     
-    public function register(RegisterRequest $reqeust){
-        $validated = $reqeust->validated();
+    public function register(RegisterRequest $request){
+        $validated = $request->validated();
 
         $user = $this->registerService->register($validated);
 

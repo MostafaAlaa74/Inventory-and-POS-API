@@ -29,6 +29,11 @@ class Order extends Model
             ->withTimestamps();
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'customer_id');
+    }
+
     public function scopeFilterByDateRange($query, $startDate, $endDate)
     {
         if ($startDate && $endDate) {

@@ -17,7 +17,7 @@ class CustomerController extends Controller
     public function index()
     {
         Gate::authorize('viewAny', Customer::class);
-        $customers = Customer::with('orders')->get();
+        $customers = Customer::with('orders')->paginate(10);
         return response()->json($customers, 200);
     }
 
