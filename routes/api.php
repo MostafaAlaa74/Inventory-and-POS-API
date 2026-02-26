@@ -17,8 +17,12 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LogoutController::class, 'logout'])->middleware('auth:sanctum');
 
-Route::resource('categories', CategoryController::class);
-Route::resource('products', ProductController::class);
+Route::resource('categories', CategoryController::class)->middleware('auth:sanctum');
 
-Route::patch('/products/{product}/add-stock', [ProductController::class, 'addStock']);
-Route::patch('/products/{product}/decrease-stock', [ProductController::class, 'decreaseStock']);
+Route::resource('products', ProductController::class)->middleware('auth:sanctum');
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::patch('/products/{product}/add-stock', [ProductController::class, 'addStock']);
+    Route::patch('/products/{product}/decrease-stock', [ProductController::class, 'decreaseStock']);
+});
+

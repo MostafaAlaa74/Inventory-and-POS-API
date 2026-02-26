@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class CategoryController extends Controller
 {
@@ -15,6 +16,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
+        Gate::authorize('viewAny', Category::class);
         $categories = Category::with(['products' => function ($query) {
             $query->where('stock_quantity', '>', 0);
         }])->get();
@@ -26,6 +28,7 @@ class CategoryController extends Controller
      */
     public function store(CreateCategoryRequest $request)
     {
+        Gate::authorize('create', Category::class);
         $data = $request->validated();
         $category = Category::create($data);
         return response()->json($category, 201);
@@ -36,6 +39,7 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
+        Gate::authorize('view', $category);
         return response()->json($category->load(['products' => function ($query) {
             $query->where('stock_quantity', '>', 0);
         }]), 200);
@@ -46,6 +50,7 @@ class CategoryController extends Controller
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
+        Gate::authorize('update', $category);
         $data = $request->validated();
         $category->update($data);
         return response()->json($category, 200);
@@ -56,6 +61,7 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
+        Gate::authorize('delete', $category);
         $category->delete();
         return response()->json(null, 204);
     }

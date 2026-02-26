@@ -8,6 +8,7 @@ use App\Http\Requests\CreateProductRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ProductController extends Controller
 {
@@ -16,6 +17,7 @@ class ProductController extends Controller
      */
     public function index()
     {
+        Gate::authorize('viewAny', Product::class);
         $products = Product::with('category')->get();
 
         return response()->json($products, 200);
@@ -26,9 +28,10 @@ class ProductController extends Controller
      */
     public function store(CreateProductRequest $request)
     {
+        Gate::authorize('create', Product::class);
         $data = $request->validated();
         $product = Product::create($data);
-        return response()->json($product, 200);
+        return response()->json($product, 201);
     }
 
     /**
@@ -36,6 +39,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        Gate::authorize('view', $product);
         return response()->json($product->load('category'), 200);
     }
 
@@ -44,6 +48,7 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
+        Gate::authorize('update', $product);
         $data = $request->validated();
         $product->update($data);
         return response()->json($product->load('category'), 200);
@@ -54,12 +59,14 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        Gate::authorize('delete', $product);
         $product->delete();
         return response()->json(null, 204);
     }
 
     public function addStock(Request $request, Product $product)
     {
+        Gate::authorize('addStock', $product);
         $request->validate([
             'quantity' => 'required|integer|min:1',
         ]);
@@ -72,6 +79,7 @@ class ProductController extends Controller
 
     public function decreaseStock(Request $request, Product $product)
     {
+        Gate::authorize('decreaseStock', $product);
         $request->validate([
             'quantity' => 'required|integer|min:1',
         ]);
