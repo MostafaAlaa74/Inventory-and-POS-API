@@ -17,7 +17,7 @@ class CreateOrderService
 
             $totalAmount = 0;
             $productsID = collect($orderData['items'])->pluck('product_id')->toArray();
-            $products = Product::whereIn('id', $productsID)->get()->keyBy('id');
+            $products = Product::whereIn('id', $productsID)->lockForUpdate()->get()->keyBy('id');
             $pivotData = [];
             $itemsToReduce = [];
             // Process each order item
@@ -41,7 +41,7 @@ class CreateOrderService
                 'user_id' => Auth::id(),
                 'customer_id' => $orderData['customer_id'] ?? null,
                 'payment_method' => $orderData['payment_method'],
-                'total_amount' => $totalAmount, // Will be updated later
+                'total_amount' => $totalAmount, 
             ]);
 
             $order->products()->attach($pivotData);

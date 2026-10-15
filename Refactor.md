@@ -11,3 +11,5 @@ Problems Founded:
             => Before Using This Method The queries equal 10 (As the number of Products)
             => After Using It The Queries are Only One Query 
         ## After Fixing The Two Problems The queries Are fixed on 10 even after Increasing the number of Products in the request ##
+    3- There Is no Lock to Prevent Race-condition in making checkout
+        =>Fixing Throw Using lockForUpdate()
