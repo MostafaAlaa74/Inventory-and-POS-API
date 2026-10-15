@@ -17,6 +17,7 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
+            'category_id' => \App\Models\Category::factory(),
             'name' => fake()->word(),
             'price' => fake()->numberBetween(100, 10000),   
             'stock_quantity' => fake()->numberBetween(0, 100), 

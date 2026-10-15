@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
@@ -29,17 +30,26 @@ class Product extends Model
             ->withTimestamps();
     }
 
-    public function decreaseStock($quantity)
+    public static function decreaseStock(array $items)
     {
-        $updated = $this->where('id', $this->id)
-            ->where('stock_quantity', '>=', $quantity)
-            ->decrement('stock_quantity', $quantity);
-
-        if($updated === 0) {
-            throw new \Exception('Insufficient stock for product: ' . $this->name . $this->id);
+        if (empty($items)) {
+            return;
         }
 
+        $caseSql = '';
+        $ids = array_keys($items);
 
+        foreach ($items as $id => $reduceBy) {
+            $id = (int) $id;
+            $reduceBy = (int) $reduceBy;
+            
+            $caseSql .= " WHEN id = {$id} THEN stock_quantity - {$reduceBy} ";
+        }
+
+        self::whereIn('id', $ids)->update([
+            'stock_quantity' => DB::raw("CASE {$caseSql} ELSE stock_quantity END"),
+            'updated_at' => now(),
+        ]);
     }
 
     public function addStock($quantity)

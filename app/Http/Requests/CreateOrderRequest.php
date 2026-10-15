@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\CheckStockRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateOrderRequest extends FormRequest
@@ -24,8 +25,8 @@ class CreateOrderRequest extends FormRequest
         return [
             'customer_id' => 'nullable|exists:customers,id',
             'payment_method' => 'required|in:cash,visa',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items' => ['required','array','min:1' , new CheckStockRule()],
+            'items.*.product_id' => 'required|integer',
             'items.*.quantity' => 'required|integer|min:1',
         ];
     }
