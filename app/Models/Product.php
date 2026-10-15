@@ -36,6 +36,7 @@ class Product extends Model
             return;
         }
 
+
         $caseSql = '';
         $ids = array_keys($items);
 
@@ -52,8 +53,26 @@ class Product extends Model
         ]);
     }
 
-    public function addStock($quantity)
+    public static function addStock(array $items)
     {
-        $this->increment('stock_quantity', $quantity);
+        if (empty($items)) {
+            return;
+        }
+
+        
+        $caseSql = '';
+        $ids = array_keys($items);
+
+        foreach ($items as $id => $increaseBy) {
+            $id = (int) $id;
+            $increaseBy = (int) $increaseBy;
+            
+            $caseSql .= " WHEN id = {$id} THEN stock_quantity + {$increaseBy} ";
+        }
+
+        self::whereIn('id', $ids)->update([
+            'stock_quantity' => DB::raw("CASE {$caseSql} ELSE stock_quantity END"),
+            'updated_at' => now(),
+        ]);
     }
 }
