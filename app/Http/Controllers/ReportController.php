@@ -3,29 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Services\Report\TopEmployeesReportService;
-use App\Services\Report\TopSellingProductsReportService;
+use App\Services\Report\EmployeesReportService;
+use App\Services\Report\ProductsReportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
-    protected $topSellingProductsReportService;
-    protected $topEmployeesReportService;
+    protected $productsReportService;
+    protected $EmployeesReportService;
 
     public function __construct(
-        TopSellingProductsReportService $topSellingProductsReportService,
-        TopEmployeesReportService $topEmployeesReportService
+        ProductsReportService $productsReportService,
+        EmployeesReportService $EmployeesReportService
     ) {
-        $this->topSellingProductsReportService = $topSellingProductsReportService;
-        $this->topEmployeesReportService = $topEmployeesReportService;
+        $this->productsReportService = $productsReportService;
+        $this->EmployeesReportService = $EmployeesReportService;
     }
 
 
-    public function topSellingProducts(Request $request)
+    public function productsReport(Request $request)
     {
         $limit = $request->input('limit', 10);
-        $topProducts = $this->topSellingProductsReportService->topSellingProducts($limit);
+        $topProducts = $this->productsReportService
+            ->withStatus($request->input('status', 'completed'))
+            ->betweenDates($request->input('start_date'), $request->input('end_date'))
+            ->get($limit, $request->input('order_by', 'total_sold'));
 
         return response()->json($topProducts);
     }
@@ -34,7 +36,10 @@ class ReportController extends Controller
     {
         $limit = $request->input('limit', 3);
 
-        $topEmployees =  $this->topEmployeesReportService->getTopEmployees($limit);
+        $topEmployees =  $this->EmployeesReportService
+            ->withStatus($request->input('status', 'completed'))
+            ->betweenDates($request->input('start_date'), $request->input('end_date'))
+            ->get($limit, $request->input('order_by', 'total_orders'));
 
         return response()->json($topEmployees, 200);
     }
