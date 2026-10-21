@@ -26,9 +26,13 @@
     2. There Is no Lock to Prevent Race-condition in making checkout
         =>Fixing Throw Using lockForUpdate()
 
-### Phase 3"
+### Phase 3:
 - Reviewing Report Generation Logic
 ## Problems Founded:
     1. TopEmployeesReport Is Fixed for the current month and fixed for the status of orders filtered(Only Completed Orders) 
         => Used Builder Design Pattern to make the report generation process more flexable and more reusable 
     2. The same problem in Products Report Generation and the same solution used for it
+
+### Phase 4:
+- Protecting Important Routes (Checkout , cancel order and Report generating) From DDOS attack by applying RateLimiting on them 
+- Applying Idempotency For Checkout to protect it from double request 

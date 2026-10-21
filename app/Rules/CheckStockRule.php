@@ -26,7 +26,7 @@ class CheckStockRule implements ValidationRule
             }
 
             if ($product->stock_quantity < $itemData['quantity']) {
-                $fail("Insufficient stock for product: {$product->name}");
+                $fail("Insufficient stock for product: {$product->name} (ID: {$product->id}). Available stock: {$product->stock_quantity}, requested: {$itemData['quantity']}.");
             }
         }
     }

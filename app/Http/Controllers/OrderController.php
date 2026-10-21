@@ -65,22 +65,27 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $validatedData = $request->validate([
-            'status' => 'sometimes|in:pending,completed,cancelled',
             'payment_method' => 'sometimes|in:cash,card',
         ]);
 
-        if(isset($validatedData['status']) && $validatedData['status'] === 'cancelled' && $order->status !== 'cancelled') {
-            
-            try {
-                $order = $this->cancelOrderService->cancel($order->id);
-                return response()->json($order, 200);
-            } catch (\Exception $e) {
-                return response()->json(['error' => $e->getMessage()], 400);
-            }
-        }
-
         $order->update($validatedData);
         return response()->json($order, 200);
+    }
+
+    public function cancel(Order $order)
+    {
+        if ($order->status === 'cancelled') {
+            return response()->json([
+                'error' => 'Order is already cancelled.'
+            ], 400);
+        }
+
+        try {
+            $order = $this->cancelOrderService->cancel($order->id);
+            return response()->json($order, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 
     /**

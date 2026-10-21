@@ -33,5 +33,13 @@ Route::resource('customers', CustomerController::class)->middleware('auth:sanctu
 
 Route::resource('orders', OrderController::class)->middleware('auth:sanctum');
 
-Route::get('/reports/top-selling-products', [ReportController::class, 'topSellingProducts']);
-Route::get('/reports/top-employees', [ReportController::class, 'topEmployees']);
+Route::resource('orders', OrderController::class)->only('store')
+->middleware(['idempotency', 'throttle:checkout' , 'auth:sanctum']);
+
+Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])
+->middleware(['throttle:cancel', 'idempotency' , 'auth:sanctum']);
+
+Route::group(['middleware' => [ 'auth:sanctum' ,'throttle:reports']], function () {
+    Route::get('/reports/top-selling-products', [ReportController::class, 'productsReport']);
+    Route::get('/reports/top-employees', [ReportController::class, 'topEmployees']);
+});
