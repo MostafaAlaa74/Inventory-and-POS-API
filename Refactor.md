@@ -1,57 +1,76 @@
-### Phase 1 :
+# Refactoring and Performance Improvements
 
-- I am focusing on Checkout Function Which is The Most Important Function In the Project.
+This document summarizes the key problems identified and the improvements made across the checkout, order cancellation, reporting, API security, and background-processing workflows.
 
-## Problems Founded:
+## Phase 1: Checkout Optimization
 
-    1. Order Table Has A Relation With User Table(Employee or Admin) and In storing data In Order Table Iam not Passing ID of The Employee so This came with an error.
-    2. For a One checkout Request Contains 10 Items(Products) it Produces 29 Queries 14 of them are duplicated
-        -> Decrement the Quantity of the products in checkout request are decremented one by one and it takes so many queries as much as products number.
-            => Fixing it throw DB::case
-            => Before Using it the decrement queries equal 10 (As the number of Products)
-            => After Using it The Queries are Only One Query
-        -> At Validating if the products in the request exists it produces queries as number of products.
-            => Fixing it by using Laravel Rules
-            => Before Using This Method The queries equal 10 (As the number of Products)
-            => After Using It The Queries are Only One Query
-        ## After Fixing The Two Problems The queries Are fixed on 10 even after Increasing the number of Products in the request ##
-    3. There Is no Lock to Prevent Race-condition in making checkout
-        =>Fixing Throw Using lockForUpdate()
+### Unassigned order relationship
 
-### Phase 2:
+- **Problem:** Checkout failed because `employee_id` was missing when creating an order.
+- **Fix:** Explicitly pass the authenticated user's ID.
 
-- Reviewing cancel Order Function
+### Excessive queries during stock decrement
 
-## Problems Founded:
+- **Problem:** A checkout with 10 items generated 29 queries, including 14 duplicates, because stock was decremented item by item.
+- **Fix:** Use a raw `DB::case` conditional update.
+- **Result:** Reduce stock-decrement queries from 10 or more to a single query, keeping total checkout queries at 10 regardless of cart size.
 
-    1. The Same Problem of decrement Stock Happens with increment stock when cancelling the order
-        => Fixing it throw DB::case
-        =>Before using it number of queries equals 17 (can increase if products in the order increased)
-        => After using it number of queries downs to 8 (Fixed)
+### Excessive queries during validation
 
-    2. There Is no Lock to Prevent Race-condition in making checkout
-        =>Fixing Throw Using lockForUpdate()
+- **Problem:** Product-existence validation generated one query per item.
+- **Fix:** Use Laravel's array validation rules with `exists:products,id`.
+- **Result:** Reduce validation queries from 10 or more to a single query.
 
-### Phase 3:
+### Checkout race conditions
 
-- Reviewing Report Generation Logic
+- **Problem:** Concurrent checkouts could oversell products.
+- **Fix:** Apply pessimistic locking with `lockForUpdate()` to serialize database transactions.
 
-## Problems Founded:
+## Phase 2: Order Cancellation Refactoring
 
-    1. TopEmployeesReport Is Fixed for the current month and fixed for the status of orders filtered(Only Completed Orders)
-        => Used Builder Design Pattern to make the report generation process more flexable and more reusable
-    2. The same problem in Products Report Generation and the same solution used for it
+### Cancellation logic in a generic CRUD method
 
-### Phase 4:
+- **Problem:** Cancellation logic was tightly coupled to the generic CRUD update method.
+- **Fix:** Move the cancellation workflow into a dedicated action and endpoint, following the Single Responsibility Principle (SRP).
 
-- Protecting Important Routes (Checkout , cancel order and Report generating) From DDOS attack by applying RateLimiting on them
-- Applying Idempotency For Checkout to protect it from double request
+### Excessive queries during stock restoration
 
-### Phase 5:
+- **Problem:** Restoring inventory one item at a time caused unnecessary queries.
+- **Fix:** Use `DB::case` logic.
+- **Result:** Reduce cancellation queries from 17 to 8.
 
-- At any POS system there is a Notification system that sends an email or notification to the admin if there is any product reaches the threshold
+### Cancellation race conditions
 
-- Added `low_stock_threshold` to the products table.
-- Created `SendLowStockAlertJob` to handle notifications asynchronously via Redis queues.
-- Used `afterCommit()` during dispatch to prevent database lock timeouts.
-- Batched low-stock products into a single job to bypass SMTP rate limits (Mailtrap 550 error) and optimize performance.
+- **Problem:** Concurrent cancellation requests risked incrementing stock more than once.
+- **Fix:** Apply pessimistic locking with `lockForUpdate()` to protect inventory restoration.
+
+## Phase 3: Dynamic Report Generation
+
+### Rigid report architecture
+
+- **Problem:** `TopEmployeesReport` and `TopSellingProductsReport` were hardcoded for the current month and specific order statuses.
+- **Fix:** Implement the Builder design pattern to decouple query construction and make report generation flexible, chainable, and reusable across date ranges and business filters.
+
+## Phase 4: API Security and Resilience
+
+### Unprotected critical endpoints
+
+- **Problem:** Critical endpoints, including checkout, cancellation, and reports, were not protected against brute-force attempts or script abuse.
+- **Fix:** Apply custom rate limiting through `Laravel RouteServiceProvider` (for example, `throttle:checkout` and `throttle:reports`).
+
+### Duplicate operations from repeated requests
+
+- **Problem:** Double-clicks or network glitches could cause duplicate financial operations when users submitted payment or cancellation requests more than once.
+- **Fix:** Add custom idempotency middleware using atomic `Cache::lock()` locks in Redis. Identical requests within a defined timeframe receive the same cached response without reaching the database.
+
+## Phase 5: Asynchronous Event Processing
+
+### Synchronous low-stock notifications
+
+- **Problem:** Sending low-stock email alerts synchronously delayed checkout responses and frequently triggered Mailtrap 550 rate-limit errors.
+- **Fix:** Add a `low_stock_threshold` to the database and move notifications to background jobs using Redis queues and `SendLowStockAlertJob`.
+
+### Queue and notification optimizations
+
+1. Use `afterCommit()` to dispatch jobs only after database locks are released.
+2. Batch low-stock products from a single cart into one consolidated email and job to help avoid SMTP rate limits.
