@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\SendLowStockAlertJob;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -43,9 +44,17 @@ class Product extends Model
         foreach ($items as $id => $reduceBy) {
             $id = (int) $id;
             $reduceBy = (int) $reduceBy;
-            
+
             $caseSql .= " WHEN id = {$id} THEN stock_quantity - {$reduceBy} ";
         }
+
+        // $lowStockProducts = self::whereIn('id', $ids)
+        //     ->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
+        //     ->get();
+
+        // foreach ($lowStockProducts as $product) {
+        //     SendLowStockAlertJob::dispatch($product);
+        // }
 
         self::whereIn('id', $ids)->update([
             'stock_quantity' => DB::raw("CASE {$caseSql} ELSE stock_quantity END"),
@@ -59,14 +68,14 @@ class Product extends Model
             return;
         }
 
-        
+
         $caseSql = '';
         $ids = array_keys($items);
 
         foreach ($items as $id => $increaseBy) {
             $id = (int) $id;
             $increaseBy = (int) $increaseBy;
-            
+
             $caseSql .= " WHEN id = {$id} THEN stock_quantity + {$increaseBy} ";
         }
 
